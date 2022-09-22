@@ -3,16 +3,17 @@ title: "Data Import"
 output: github_document
 ---
 
-```{r, eval = FALSE}
+```{r, echo = FALSE}
 library(tidyverse)
 library(readxl)
 library(haven)
+library(readr)
 ```
 
 
 ## Data Import: CSVs
 
-Let's import data using the `reader` package.
+Let's import data using the `readr` package.
 
 ```{r}
 litters_df = read_csv("data_import_examples/FAS_litters.csv")
@@ -70,10 +71,12 @@ pulse_df = read_sas("data_import_examples/public_pulse_data.sas7bdat")
 ## Data Export
 
 ```{r}
-write_csv(lotr_words, file = "results/lotr_words.csv")
+write_csv(lotr_words, file = "Results/lotr_words.csv")
 ```
 
 ## Why not base r???
+
+Too tideous?
 
 ```{r}
 dont_do_this_df = read.csv("data_import_examples/FAS_litters.csv")
