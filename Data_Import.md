@@ -11,16 +11,19 @@ Data Import
     ## ✖ dplyr::lag()    masks stats::lag()
 
 In this excercise we will be using relative path (not absolute path.
-Absolute path = full path name). \* Absolute: a file or folder’s “full
-address” on your computer \* Relative: directions to a file or folder
-from your current working directory
+Absolute path = full path name).
+
+-   Absolute: a file or folder’s “full address” on your computer
+
+-   Relative: directions to a file or folder from your current working
+    directory
 
 # Import Data
 
 ## CSVs
 
 To import a csv file, we’ll use a function from `readr` (this function
-is included in the tidyverse package):
+is included in the tidyverse package).
 
 ``` r
 litters_data = read_csv("./Example_Data/FAS_litters.csv")
@@ -152,13 +155,18 @@ weirdness – there are no blank lines or columns, the first row is the
 variable name, missing values are stored in sensible ways. When this
 isn’t the case, arguments to read_csv are helpful.
 
-Examples: \* `col_names`: Is the first row in the your dataset the
-variable names? By default, it is `TRUE`. If `FALSE`, column names are
-`X1`, `X1`, … . You can also supply column names. \* `na`: Telling R
-what values you would want to treat as ‘missing values’. By default, R
-will treat empty rows and `NA` as missing values, but you may want to
-add other values (eg. 999, na, . , etc.). \* `skip`: number of rows to
-skip before reading data.
+Examples:
+
+-   `col_names`: Is the first row in the your dataset the variable
+    names? By default, it is `TRUE`. If `FALSE`, column names are `X1`,
+    `X1`, … . You can also supply column names.
+
+-   `na`: Telling R what values you would want to treat as ‘missing
+    values’. By default, R will treat empty rows and `NA` as missing
+    values, but you may want to add other values (eg. 999, na, . ,
+    etc.).
+
+-   `skip`: number of rows to skip before reading data.
 
 ``` r
 litters_data = read_csv("Example_Data/FAS_litters.csv", na = c("", "NA", 999, 88,) skip = 2)
@@ -198,7 +206,7 @@ litters_data = read_csv(file = "./Example_Data/FAS_litters.csv",
 
 ## Excel
 
-`read_csv` is built in in RStudio, but `read_excel` is not. That’s why
+`read_csv` is built in with RStudio, but `read_excel` is not. That’s why
 we need to load the package `readxl` at the beginning. If we need more
 information with `read_excel`, type `?read_excel` in the console.
 
