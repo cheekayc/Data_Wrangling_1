@@ -1,0 +1,255 @@
+---
+title: "Data_Manipulation with `dplyr`"
+author: "Lectured by Christine Mauro"
+date: "2022-09-22"
+output: github_document
+---
+
+```{r, echo = FALSE}
+library(tidyverse)
+```
+
+I'm setting how my R Markdown document would look like:
+```{r setup}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  fig.width = 6,
+  fig.asp = 0.6,
+  out.width = "90%"
+)
+```
+
+Once you've imported data, you're going to need to do some *cleaning up*.
+
+Before we begin cleaning up the data, I would change my printing option (shown in console) because we will be looking at a lot of datasets.
+```{r print}
+options(tibble.print_min = 3)
+```
+
+Import and clean the datasets.
+```{r import and clean, message = FALSE}
+litters_data = read_csv("Example_Data/FAS_litters.csv")
+litters_data = janitor::clean_names(litters_data)
+
+pups_data = read_csv("Example_Data/FAS_pups.csv")
+pups_data = janitor::clean_names(pups_data)
+```
+
+I have checked my datasets in the console, and they look good.
+
+## Select
+
+`Select` is useful when we only want to select a certain **columns** (variables) from the imported datatset.
+
+Here are several ways to do it:
+
+1. Specify the columns you want to keep by naming all of them. 
+
+```{r all names}
+select(litters_data, group, litter_number, gd0_weight, pups_born_alive)
+```
+
+2. We can specify a **range** of variables we want to include. This is a nice little shorthand, so we don't need to list every variable out.
+
+```{r range}
+select(litters_data, group:gd_of_birth)
+```
+
+3. We can also specify the columns we would like to **remove**.
+
+```{r remove}
+select(litters_data, -pups_survive, -group)
+```
+
+4. We can **rename** variables in the process of selecting variables. Left side is new name, right side is original variable name.
+```{r rename ok}
+select(litters_data, GROUP = group, LiTtEr_NuMbEr = litter_number)
+```
+
+5. There are some handy helper functions for `select`; read about all of them using `?select_helpers`.
+**`starts_with()`**, **`ends_with()`**, and `contains()` are oftenly used, especially when the variables are named with suffixes or other standard patterns.
+
+```{r start with}
+select(litters_data, starts_with("gd"))
+```
+
+```{r ends with}
+select(litters_data, ends_with("weight"))
+```
+
+6. **`everything`** is handy for reorganizing columns without discarding anything. This way we pull the variables `litter_number` and `pups_survive` to the front, and every other variables follows after that. Kind of like rearranging the columns (variables) in the way we like it to demonstrate.
+```{r everthing}
+select(litters_data, litter_number, pups_survive, everything())
+```
+
+### Rename
+
+If we just want to rename something, just use the `rename` instead of `select`. This way we can rename some variables but also keep the rest of the variables that we want.
+
+```{r rename good}
+rename(litters_data, GROUP = group, LITTER_number = litter_number)
+```
+
+## Filter
+
+`Filter` is for **selecting rows**. We filter rows based on logical expressions using the `filter` function. Like `select`, the first argument to `filter` is the data frame you are filtering; all subsequent arguments are *logical expressions*.
+
+Some common comparison operators: (`>`, `>=`, `<`, `<=`, `==`, and `!=`)
+
+* `=` is assigning values to an object.
+* `==` is "equal to"
+* `!=` is "not equal to"
+* `|` is "OR"
+* `!` is negate (like not...)
+* `%in%` detects if values appear in a set; useful for character variables.
+* `is.na()` to find missing values
+
+The results of comparisons are logical -- the statement is `TRUE` or `FALSE` depending on the values you compare -- and can be combined with other comparisons using the logical operators `&` and `|` or negated using `!`.
+
+Example:
+
+* `gd_of_birth == 20` : Any rows with values not equal to 20 will be dropped.
+
+* `pups_born_alive >= 2` : Any rows with values less than 2 will be dropped.
+
+* `pups_survive != 4` : Rows with values not equal to 4 will be included. Rows equal to 4 will be dropped.
+
+* `!(pups_survive == 4)` : Will give the same results as above.
+
+* `!((pups_survive == 4) & (gd_of_birth == 20))` : Filter out the rows where `pups_survive` = 4 **and** `gd_of_birth` = 20, and keep the rest.
+
+* `group %in% c("Con7", "Con8")` : Select rows that has "Con7" or "Con8" on the `group` column.
+
+* `group == "Con7" & gd_of_birth == 20` : Select rows where `group` = "Con7" and `gd_of_birth` = 20.
+
+Example code chunk:
+
+```{r filter1}
+filter(litters_data, gd_of_birth == 20)
+```
+
+```{r filter2}
+filter(litters_data, group == "Con7" & gd_of_birth == 20)
+```
+
+### Delete missing values
+
+A very common filtering step requires you to omit missing observations. You can do this with `filter`, but I recommend using `drop_na` from the `tidyr` package.
+
+* `drop_na(dataset)` will remove any row with a missing value.
+
+* `drop_na(dataset, column)` will remove rows with missing values in that specified column.
+
+
+## Mutate
+
+**Create new** variables or **change** existing variables using `mutate`.
+
+The example below creates a new variable measuring the difference between `gd18_weight` and `gd0_weight` and modifies the existing `group` variable.
+
+```{r mutate}
+mutate(litters_data,
+       wt_gain = gd18_weight - gd0_weight,
+       group = str_to_lower(group), # `str_to_lower` makes all the alphabets in the `group` column to lowercase
+       wt_gain_kg = wt_gain * 2.2)
+```
+
+A few things in the example above are worth noting:
+
+* Your new variables can be functions of old variables.
+* New variables appear at the end of the dataset in the order that they are created.
+* You can overwrite old variables.
+* You can create new variable and immediately refer to (or change) it.
+
+
+## Arrange
+
+`Arrange` is like `Proc sort` in SAS; sorting data.
+
+In the example below, I will sort the `litter_data` dataset on `group` first, and then `pups_born_alive` in ascending order.
+
+```{r sort ascending}
+head(arrange(litters_data, group, pups_born_alive), 10) 
+```
+
+You can also sort in descending order.
+
+```{r sort descending}
+arrange(litters_data, desc(group), desc(pups_born_alive))
+```
+
+
+## Piping `%>%`
+
+We've seen several commands you will use regularly for data manipulation and cleaning. You will rarely use them in isolation. 
+For example, suppose you want to load the data, clean the column names, remove `pups_survive`, create `wt_gain`, and remove missing values in the `wt_gain` column. There are a couple of options for this kind of multi-step data manipulation.
+
+1. Step-by-step
+
+```{r many lines}
+litters_data_raw = read_csv("Example_Data/FAS_litters.csv",
+                    col_types = "ccddiiii")
+
+litters_data_clean_names = janitor::clean_names(litters_data_raw)
+
+litters_data_selected_cols = select(litters_data_clean_names, -pups_survive)
+
+litters_data_with_vars = mutate(litters_data_selected_cols,
+                                wt_gain = gd18_weight - gd0_weight,
+                                group = str_to_lower(group))
+
+litters_data_with_vars_without_missing = drop_na(litters_data_with_vars, wt_gain)
+
+litters_data_with_vars_without_missing
+```
+
+2. Nesting
+
+```{r complicated}
+litters_data_clean = 
+  drop_na(
+    mutate(
+      select(
+        janitor::clean_names(
+          read_csv("Example_Data/FAS_litters.csv", col_types = "ccddiiii")
+        ),
+      -pups_survive
+      ),
+    wt_gain = gd18_weight - gd0_weight,
+    group = str_to_lower(group)
+    ),
+    wt_gain
+)
+
+litters_data_clean
+```
+
+The two examples above are both confusing and bad. The first one gets confusing and clutters our workspace. The second one has to be read inside out and you have to keep track of the `()`.
+
+Piping solves this problem. It allows you to turn the nested approach into a sequential chain by passing the results of one function call as an argument to the next function call.
+
+3. **Piping**
+
+```{r best}
+litters_data =
+  read_csv("./Example_Data/FAS_litters.csv", col_types = "ccddiiii") %>%
+  janitor::clean_names() %>%
+  select(-pups_survive) %>%
+  mutate(
+    wt_gain = gd18_weight - gd0_weight,
+    group = str_to_lower(group)) %>%
+  drop_na(wt_gain)
+
+litters_data
+```
+
+All three approaches above result in the same dataset, but the piped commands are the most straightforward.
+
+**`%>%`** is read *"and then"*. The keyboard shortcut for `%>%` is `Ctrl` + `Shift` + `M`. 
+
+
+
+
+
+
+
