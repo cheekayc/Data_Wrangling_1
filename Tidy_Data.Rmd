@@ -1,0 +1,118 @@
+---
+title: "Tidy Data"
+author: "Elizabeth Sweeney"
+date: "2022-09-27"
+output: github_document
+---
+
+```{r load package, echo = FALSE}
+library(tidyverse)
+options(tibble.print_min = 5)
+```
+
+# `pivot_longer`
+
+```{r read pulse, echo = FALSE}
+pulse_df = haven::read_sas("Example_Data/public_pulse_data.sas7bdat") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit",
+    names_prefix = "bdi_score_",
+    values_to = "bdi"
+  ) %>% 
+  mutate(
+    visit = replace(visit, visit == 'bl', '00m'),
+    visit = factor(visit)) %>% 
+  arrange(id, visit)
+```
+
+### Learning Assessment 1
+
+```{r LA1, echo = FALSE}
+litters_df = read_csv("Example_Data/FAS_litters.csv") %>% 
+  janitor::clean_names() %>% 
+  select(litter_number, gd0_weight, gd18_weight) %>% 
+  pivot_longer(
+    gd0_weight:gd18_weight,
+    names_to = "gd",
+    values_to = "weight") %>% 
+  mutate(gd = recode(gd, "gd0_weight" = 0, "gd18_weight" = 18))
+```
+
+# `pivot_wider`
+
+```{r wider}
+analysis_result = tibble(
+  group = c("treatment", "treatment", "placebo", "placebo"),
+  time = c("pre", "post", "pre", "post"),
+  mean = c(4, 8, 3.5, 4)
+) %>% 
+  pivot_wider(
+    names_from = "time",
+    values_from = "mean"
+  )
+```
+
+# Binding rows
+
+```{r read tables}
+fellowship_ring = 
+  readxl::read_excel("Example_Data/LotR_Words.xlsx", range = "B3:D6") %>% 
+  mutate(movie = "Fellowship_Ring")
+
+two_towers =
+  readxl::read_excel("Example_Data/LotR_Words.xlsx", range = "F3:H6") %>% 
+  mutate(movie = "Two_Towers")
+
+return_king = 
+  readxl::read_excel("Example_Data/LotR_Words.xlsx", range = "J3:L6") %>% 
+  mutate(movie = "Return_King")
+```
+
+```{r combine tables}
+lotr_tidy =
+  bind_rows(fellowship_ring, two_towers, return_king) %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    female:male,
+    names_to = "gender",
+    values_to = "words") %>% 
+  mutate(race = str_to_lower(race)) %>% 
+  select(movie, everything())
+```
+
+# Joining datasets
+
+```{r join dataframe}
+pups = read_csv("Example_Data/FAS_pups.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    sex = recode(sex, `1` = "male", `2` = "female"),
+    sex = factor(sex))
+
+litters = read_csv("Example_Data/FAS_litters.csv") %>% 
+  janitor::clean_names() %>% 
+  separate(group, into = c("dose", "day_of_tx"), sep = 3) %>% 
+  mutate(
+    wt_gain = gd18_weight - gd0_weight,
+    dose = str_to_lower(dose)
+  )
+
+fas_data = 
+  left_join(pups, litters, by = "litter_number")
+```
+
+To see what was being dropped after left-joining the datasets above, type:
+`anti_join(pups, litters)` in the console.
+
+### Learning Assessment 2
+
+```{r LA2}
+
+```
+
+
+
+
+
